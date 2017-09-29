@@ -14,6 +14,7 @@
 @property (weak) IBOutlet NSTextField *txtPath;
 @property (unsafe_unretained) IBOutlet NSTextView *txtResult;
 @property (unsafe_unretained) IBOutlet NSTextView *txtFilter;
+@property (weak) IBOutlet NSTextField *prefixTF;
 
 @property (nonatomic,strong) CATClearProjectTool* clearProjectTool;
 
@@ -46,17 +47,23 @@
 
 -(void)searchAllClassesSuccess:(NSMutableDictionary *)dic{
     NSString* msg = @"searching all classes success:\n";
-    _txtResult.string = [msg stringByAppendingString:[self _getClassNamesFromDic:dic]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+       _txtResult.string = [msg stringByAppendingString:[self _getClassNamesFromDic:dic]];
+    });
 }
 
 -(void)searchUnUsedClassesSuccess:(NSMutableDictionary *)dic{
-    NSString* msg = @"search unused classes success:\n";
+    NSString* msg = [NSString stringWithFormat:@"find %ld total unused classes：\n", dic.allKeys.count ];
+    dispatch_async(dispatch_get_main_queue(), ^{
     _txtResult.string = [msg stringByAppendingString:[self _getClassNamesFromDic:dic]];
+    });
 }
 
 -(void)clearUnUsedClassesSuccess:(NSMutableDictionary *)dic{
     NSString* msg = @"clear unused classes success:\n";
+    dispatch_async(dispatch_get_main_queue(), ^{
     _txtResult.string = [msg stringByAppendingString:[self _getClassNamesFromDic:dic]];
+    });
 }
 
 #pragma mark -- helper
@@ -64,8 +71,15 @@
 -(NSString *)_getClassNamesFromDic:(NSMutableDictionary *)dic{
     NSArray* keys = [dic allKeys];
     NSString* classNames = @"";
+    
     for (NSString* className in keys) {
-        classNames = [classNames stringByAppendingString:[NSString stringWithFormat:@"\n%@",className]];
+        if (self.prefixTF.stringValue && ![self.prefixTF.stringValue isEqualToString:@""]) {
+            if ([className hasPrefix:self.prefixTF.stringValue]) {
+                classNames = [classNames stringByAppendingString:[NSString stringWithFormat:@"\n%@",className]];
+            }
+        } else {
+            classNames = [classNames stringByAppendingString:[NSString stringWithFormat:@"\n%@",className]];
+        }
     }
     return classNames;
 }
